@@ -7,7 +7,7 @@ else
 fi
 
 function generate_project(){
-    docker run --rm -it -v $(pwd)/$1:/$1 node:16.17.1-slim sh -c "npm install -y -g @angular/cli
+    docker run --rm -it -v $(pwd)/$1:/$1 node_custom sh -c "
     echo 'Generating project$1...'
     ng new $1 --routing --style=css --skip-git --defaults=false
     # cd $1
@@ -66,14 +66,25 @@ function generate_project(){
     # echo 'Installing ngx-owl-carousel6...'
     # npm install ngx-owl-carousel6 --save
     # echo 'Installing ngx-owl-carousel'"
+
+    echo 'Project generated successfully!'
+    echo 'ending, modifying user permissions...'
+    sudo find $1 -type d -exec chmod 755 {} \; && sudo find $1 -type f -exec chmod 644 {} \; && sudo chown -R $(whoami):$(whoami) $1
+    echo 'done!'
 }
 
+function docker_build(){
+    docker build -f docker/Dockerfile -t node_custom ./docker
+}
+
+## Construccion de la imagen
+docker_build
 ## Comprobar si un directorio existe o esta vacio
 if [ -d "./$workdir" ]; then
     if [ "$(ls -A ./$workdir)" ]; then
         echo "Ya existe un proyecto en el directorio"
     else
-        generate_project $1
+        generate_project $workdir
     fi
 else
     generate_project $workdir
